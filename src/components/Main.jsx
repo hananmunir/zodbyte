@@ -10,23 +10,24 @@ import { useControls } from 'leva';
 const LucyModel = () => {
   const gltf = useLoader(GLTFLoader, '/models/Lucy100k.gltf');
   const model = gltf.scene;
+  
   const controls = {
-    positionX: { value: 215, min: -500, max: 500 },
+    positionX: { value: 45, min: -500, max: 500 },
     positionY: { value: 75, min: -100, max: 100 },
     positionZ: { value: 0, min: -100, max: 100 },
   };
   // decrease the size of the model
   model.scale.set(0.1, 0.1, 0.1);
   // model.position.set(5, 75, 0);
-  model.rotateY(5)
+  model.rotateY(5);
   // use the useRef hook to access the model mesh
   const meshRef = useRef();
 
   // use useFrame to perform updates on each frame
-  useFrame(() => {
-    // rotate mesh every frame, this is outside of React without overhead
-    meshRef.current.rotation.y += 0.01;
-  });
+  // useFrame(() => {
+  //   // rotate mesh every frame, this is outside of React without overhead
+  //   meshRef.current.rotation.y += 0.01;
+  // });
 
    // use useControls to create a control panel with the properties defined in the controls object
    const { positionX, positionY, positionZ } = useControls(controls);
@@ -38,10 +39,10 @@ const LucyModel = () => {
 };
 
 
-
 export default function Main() {
   const spotLightRef = React.useRef();
   const lightHelperRef = React.useRef();
+  const planeRef = React.useRef();
   const [textures, setTextures] = React.useState(null);
 
 
@@ -63,15 +64,55 @@ export default function Main() {
 
   //initial state of spot light controls
   const spotlightControls = useControls({
-    color: '#004cff',
-    intensity: { value: 200, min: 10, max: 200 },
-    distance: { value: 224, min: 150, max: 1000 },
+    color: '#0070ff',
+    intensity: { value: 200, min: 10, max: 200, step: 10 },
+    distance: { value: 224, min: 150, max: 500, step: 10 },
     //to add a texture to the light, we need to use the texture object
     map: { value: 'disturb.jpg', options: ['none', 'disturb.jpg', 'colors.png', 'uv_grid_opengl.jpg'] },
-    angle: { value: 0.10, min: .10, max: Math.PI / 2 },
-    penumbra: { value: 1, min: 0, max: 1 },
-    decay: { value: 1, min: 0, max: 2 },
+    angle: { value: 0.09, min: .05, max: Math.PI / 2 , step: .01},
+    penumbra: { value: 1, min: 0, max: 1, step: .01 },
+    decay: { value: 1, min: 1, max: 2, step: .01 },
+    
   });
+
+  //to make group controls
+  const groupControls = useControls({
+    X: { value: 0, min: -3000, max: 3000 },
+    Y: { value: 1500, min: -3000, max: 3000 },
+    Z: { value: 0, min: -3000, max: 3000 },
+    // to rotate te group
+    rotateX: { value: 0, min: -Math.PI, max: Math.PI, step: .01 },
+    rotateY: { value: 0, min: -Math.PI, max: Math.PI, step: .01 },
+    rotateZ: { value: 0, min: -Math.PI, max: Math.PI, step: .01 },
+  });
+
+  //to rotate spot light continuously 
+  const RotateLight = () => {
+    useFrame(() => {
+      spotLightRef.current.position.x = Math.sin(Date.now() * 0.0005) * 1000;
+      spotLightRef.current.position.z = Math.cos(Date.now() * 0.0005) * 1000;
+    });
+    return (
+      <spotLight
+              ref={spotLightRef}
+              scale={[10,10,10]}
+              color={spotlightControls.color}
+              intensity={spotlightControls.intensity}
+              distance={spotlightControls.distance}
+              map={textures && textures[spotlightControls.map]}
+              angle={spotlightControls.angle}
+              penumbra={spotlightControls.penumbra}
+              decay={spotlightControls.decay}
+              castShadow
+              shadow-mapSize-width={1024}
+              shadow-mapSize-height={1024}
+              shadow-camera-near={10}
+              shadow-camera-far={200}
+              shadow-focus={1}
+            />
+    )
+  };
+
 
   
 
@@ -80,8 +121,8 @@ export default function Main() {
       <Canvas
         concurrent
         camera={{
-          position: [100, 20, 1],
-          fov: 18,
+          position: [100, 60, 1],
+          fov: 15,
           near: 1,
           far: 1000,
         }}
@@ -101,24 +142,10 @@ export default function Main() {
           <group>
             <LucyModel />
           </group>
-          <group position={[ 1695,560,0 ]}  >
-            <spotLight
-              ref={spotLightRef}
-              scale={[10,10,10]}
-              color={spotlightControls.color}
-              intensity={spotlightControls.intensity}
-              distance={spotlightControls.distance}
-              map={textures && textures[spotlightControls.map]}
-              angle={spotlightControls.angle}
-              penumbra={spotlightControls.penumbra}
-              decay={spotlightControls.decay}
-              castShadow
-              shadow-mapSize-width={1024}
-              shadow-mapSize-height={1024}
-              shadow-camera-near={10}
-              shadow-camera-far={200}
-              shadow-focus={1}
-            />
+          <group position={[groupControls.X, groupControls.Y, groupControls.Z ]}
+          rotation={[groupControls.rotateX, groupControls.rotateY, groupControls.rotateZ]}
+           >
+            <RotateLight />
           </group>
           {spotLightRef.current && (
             <spotLightHelper args={[spotLightRef.current]} ref={lightHelperRef} />
