@@ -128,7 +128,7 @@ export default function Main() {
         }}
       >
         <ambientLight intensity={0.05} />
-        <pointLight position={[600, 125, 300]} />
+        <pointLight position={[600, 65, 300]} />
         <OrbitControls minDistance={20} maxDistance={2000} maxPolarAngle={Math.PI / 2} />
         <group scale={[.1,.1,.1]} >
           <mesh
