@@ -10,9 +10,14 @@ import { useControls } from 'leva';
 const LucyModel = () => {
   const gltf = useLoader(GLTFLoader, '/models/Lucy100k.gltf');
   const model = gltf.scene;
+  const controls = {
+    positionX: { value: 215, min: -500, max: 500 },
+    positionY: { value: 75, min: -100, max: 100 },
+    positionZ: { value: 0, min: -100, max: 100 },
+  };
   // decrease the size of the model
   model.scale.set(0.1, 0.1, 0.1);
-  model.position.set(5, 75, 0);
+  // model.position.set(5, 75, 0);
   model.rotateY(5)
   // use the useRef hook to access the model mesh
   const meshRef = useRef();
@@ -22,6 +27,12 @@ const LucyModel = () => {
     // rotate mesh every frame, this is outside of React without overhead
     meshRef.current.rotation.y += 0.01;
   });
+
+   // use useControls to create a control panel with the properties defined in the controls object
+   const { positionX, positionY, positionZ } = useControls(controls);
+
+   // set the position of the model based on the values of the controls
+   model.position.set(positionX, positionY, positionZ);
   
   return <primitive object={model} ref={meshRef} />;
 };
@@ -52,16 +63,17 @@ export default function Main() {
 
   //initial state of spot light controls
   const spotlightControls = useControls({
-    color: '#ffffff',
-    intensity: { value: 10, min: 10, max: 100 },
+    color: '#004cff',
+    intensity: { value: 200, min: 10, max: 200 },
     distance: { value: 224, min: 150, max: 1000 },
     //to add a texture to the light, we need to use the texture object
     map: { value: 'disturb.jpg', options: ['none', 'disturb.jpg', 'colors.png', 'uv_grid_opengl.jpg'] },
-    angle: { value: Math.PI / 8, min: .10, max: Math.PI / 2 },
+    angle: { value: 0.10, min: .10, max: Math.PI / 2 },
     penumbra: { value: 1, min: 0, max: 1 },
     decay: { value: 1, min: 0, max: 2 },
   });
 
+  
 
   return (
     <div style={{ height: '100vh', backgroundColor: "#000" }}>
@@ -69,7 +81,7 @@ export default function Main() {
         concurrent
         camera={{
           position: [100, 20, 1],
-          fov: 20,
+          fov: 18,
           near: 1,
           far: 1000,
         }}
@@ -89,7 +101,7 @@ export default function Main() {
           <group>
             <LucyModel />
           </group>
-          <group position={[-55, 1700, 0]} >
+          <group position={[ 1695,560,0 ]}  >
             <spotLight
               ref={spotLightRef}
               scale={[10,10,10]}
