@@ -7,33 +7,26 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { SpotLight } from '@react-three/drei';
 import { useControls } from 'leva';
 
+//initial state of spot light controls
+const intensityValue = 200;
+const distanceValue = 224;
+const angleValue = 0.09;
+const penumbraValue = 0.05;
+const decayValue = 1;
+
+
 const LucyModel = () => {
   const gltf = useLoader(GLTFLoader, '/models/Lucy100k.gltf');
   const model = gltf.scene;
-  
-  const controls = {
-    positionX: { value: 45, min: -500, max: 500 },
-    positionY: { value: 75, min: -100, max: 100 },
-    positionZ: { value: 0, min: -100, max: 100 },
-  };
+
   // decrease the size of the model
   model.scale.set(0.1, 0.1, 0.1);
   // model.position.set(5, 75, 0);
   model.rotateY(5);
   // use the useRef hook to access the model mesh
   const meshRef = useRef();
-
-  // use useFrame to perform updates on each frame
-  // useFrame(() => {
-  //   // rotate mesh every frame, this is outside of React without overhead
-  //   meshRef.current.rotation.y += 0.01;
-  // });
-
-   // use useControls to create a control panel with the properties defined in the controls object
-   const { positionX, positionY, positionZ } = useControls(controls);
-
    // set the position of the model based on the values of the controls
-   model.position.set(positionX, positionY, positionZ);
+   model.position.set(25, 75, 0);
   
   return <primitive object={model} ref={meshRef} />;
 };
@@ -65,25 +58,14 @@ export default function Main() {
   //initial state of spot light controls
   const spotlightControls = useControls({
     color: '#0070ff',
-    intensity: { value: 200, min: 10, max: 200, step: 10 },
-    distance: { value: 224, min: 150, max: 500, step: 10 },
+    intensity: { value: intensityValue , min: 10, max: 200, step: 10 },
+    distance: { value: distanceValue, min: 150, max: 500, step: 10 },
     //to add a texture to the light, we need to use the texture object
     map: { value: 'disturb.jpg', options: ['none', 'disturb.jpg', 'colors.png', 'uv_grid_opengl.jpg'] },
-    angle: { value: 0.09, min: .05, max: Math.PI / 2 , step: .01},
-    penumbra: { value: 1, min: 0, max: 1, step: .01 },
-    decay: { value: 1, min: 1, max: 2, step: .01 },
+    angle: { value: angleValue, min: .05, max: Math.PI / 2 , step: .01},
+    penumbra: { value: penumbraValue, min: 0, max: 1, step: .01 },
+    decay: { value: decayValue, min: 1, max: 2, step: .01 },
     
-  });
-
-  //to make group controls
-  const groupControls = useControls({
-    X: { value: 0, min: -3000, max: 3000 },
-    Y: { value: 1500, min: -3000, max: 3000 },
-    Z: { value: 0, min: -3000, max: 3000 },
-    // to rotate te group
-    rotateX: { value: 0, min: -Math.PI, max: Math.PI, step: .01 },
-    rotateY: { value: 0, min: -Math.PI, max: Math.PI, step: .01 },
-    rotateZ: { value: 0, min: -Math.PI, max: Math.PI, step: .01 },
   });
 
   //to rotate spot light continuously 
@@ -112,8 +94,6 @@ export default function Main() {
             />
     )
   };
-
-
   
 
   return (
@@ -128,7 +108,7 @@ export default function Main() {
         }}
       >
         <ambientLight intensity={0.05} />
-        <pointLight position={[600, 65, 300]} />
+        <pointLight position={[600, 35, 300]} />
         <OrbitControls minDistance={20} maxDistance={2000} maxPolarAngle={Math.PI / 2} />
         <group scale={[.1,.1,.1]} >
           <mesh
@@ -142,9 +122,7 @@ export default function Main() {
           <group>
             <LucyModel />
           </group>
-          <group position={[groupControls.X, groupControls.Y, groupControls.Z ]}
-          rotation={[groupControls.rotateX, groupControls.rotateY, groupControls.rotateZ]}
-           >
+          <group position={[0, 1500, 0]}>
             <RotateLight />
           </group>
           {spotLightRef.current && (
