@@ -1,11 +1,11 @@
-import React,{useRef, useEffect, useState} from 'react';
-import * as THREE from 'three';
-import { useLoader, useFrame } from '@react-three/fiber';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { SpotLight } from '@react-three/drei';
-import { useControls } from 'leva';
+import React, { useRef, useEffect, useState } from "react";
+import * as THREE from "three";
+import { useLoader, useFrame, useThree } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { SpotLight } from "@react-three/drei";
+import { useControls } from "leva";
 
 //initial state of spot light controls
 const intensityValue = 200;
@@ -13,24 +13,38 @@ const distanceValue = 224;
 const angleValue = 0.09;
 const penumbraValue = 0.05;
 const decayValue = 1;
-
+const focus = 1;
+const x = 97,
+  y = 60,
+  z = 34;
 
 const LucyModel = () => {
-  const gltf = useLoader(GLTFLoader, '/models/Lucy100k.gltf');
+  const gltf = useLoader(GLTFLoader, "/models/Lucy100k.gltf");
   const model = gltf.scene;
+  const { camera } = useThree();
+  // const controls = useControls({
+  //   x: { value: x, min: -100, max: 100, step: 1 },
+  //   y: { value: y, min: -100, max: 100, step: 1 },
+  //   z: { value: z, min: -100, max: 100, step: 1 },
+  // });
+
+  useFrame(() => {
+    camera.position.x = x;
+    camera.position.y = y;
+    camera.position.z = z;
+  });
 
   // decrease the size of the model
-  model.scale.set(0.1, 0.1, 0.1);
+  model.scale.set(0.12, 0.12, 0.12);
   // model.position.set(5, 75, 0);
-  model.rotateY(5);
+  model.rotateY(THREE.MathUtils.degToRad(230));
   // use the useRef hook to access the model mesh
   const meshRef = useRef();
-   // set the position of the model based on the values of the controls
-   model.position.set(25, 75, 0);
-  
-  return <primitive object={model} ref={meshRef} />;
-};
+  // set the position of the model based on the values of the controls
+  model.position.set(25, 85, 10);
 
+  return <primitive object={model} ref={meshRef} receiveShadow />;
+};
 
 export default function Main() {
   const spotLightRef = React.useRef();
@@ -38,10 +52,9 @@ export default function Main() {
   const planeRef = React.useRef();
   const [textures, setTextures] = React.useState(null);
 
-
   React.useEffect(() => {
-    const loader = new THREE.TextureLoader().setPath('/textures/');
-    const filenames = ['disturb.jpg', 'colors.png', 'uv_grid_opengl.jpg'];
+    const loader = new THREE.TextureLoader().setPath("/textures/");
+    const filenames = ["disturb.jpg", "colors.png", "uv_grid_opengl.jpg"];
     const newTextures = { none: null };
     for (let i = 0; i < filenames.length; i++) {
       const filename = filenames[i];
@@ -57,79 +70,126 @@ export default function Main() {
 
   //initial state of spot light controls
   const spotlightControls = useControls({
-    color: '#0070ff',
-    intensity: { value: intensityValue , min: 10, max: 200, step: 10 },
+    color: "#11a3c4",
+    intensity: { value: intensityValue, min: 10, max: 200, step: 10 },
     distance: { value: distanceValue, min: 150, max: 500, step: 10 },
     //to add a texture to the light, we need to use the texture object
-    map: { value: 'disturb.jpg', options: ['none', 'disturb.jpg', 'colors.png', 'uv_grid_opengl.jpg'] },
-    angle: { value: angleValue, min: .05, max: Math.PI / 2 , step: .01},
-    penumbra: { value: penumbraValue, min: 0, max: 1, step: .01 },
-    decay: { value: decayValue, min: 1, max: 2, step: .01 },
-    
+    map: {
+      value: "disturb.jpg",
+      options: ["none", "disturb.jpg", "colors.png", "uv_grid_opengl.jpg"],
+    },
+    angle: { value: angleValue, min: 0.05, max: Math.PI / 2, step: 0.01 },
+    penumbra: { value: penumbraValue, min: 0, max: 1, step: 0.01 },
+    decay: { value: decayValue, min: 1, max: 2, step: 0.01 },
+    focus: { value: focus, min: -3, max: 3, step: 0.05 },
   });
 
-  //to rotate spot light continuously 
+  //to rotate spot light continuously
   const RotateLight = () => {
     useFrame(() => {
-      spotLightRef.current.position.x = Math.sin(Date.now() * 0.0005) * 1000;
-      spotLightRef.current.position.z = Math.cos(Date.now() * 0.0005) * 1000;
+      spotLightRef.current.position.x = Math.sin(Date.now() * 0.0003) * 800;
+      spotLightRef.current.position.z = Math.cos(Date.now() * 0.0003) * 800;
     });
     return (
       <spotLight
-              ref={spotLightRef}
-              scale={[10,10,10]}
-              color={spotlightControls.color}
-              intensity={spotlightControls.intensity}
-              distance={spotlightControls.distance}
-              map={textures && textures[spotlightControls.map]}
-              angle={spotlightControls.angle}
-              penumbra={spotlightControls.penumbra}
-              decay={spotlightControls.decay}
-              castShadow
-              shadow-mapSize-width={1024}
-              shadow-mapSize-height={1024}
-              shadow-camera-near={10}
-              shadow-camera-far={200}
-              shadow-focus={1}
-            />
-    )
+        ref={spotLightRef}
+        scale={[10, 10, 10]}
+        color={spotlightControls.color}
+        intensity={spotlightControls.intensity}
+        distance={spotlightControls.distance}
+        map={textures && textures[spotlightControls.map]}
+        angle={spotlightControls.angle}
+        penumbra={spotlightControls.penumbra}
+        decay={spotlightControls.decay}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-near={10}
+        shadow-camera-far={200}
+        shadow-focus={spotlightControls.focus}
+      />
+    );
   };
-  
 
   return (
-    <div style={{ height: '100vh', backgroundColor: "#000" }}>
-      <Canvas
-        concurrent
-        camera={{
-          position: [100, 60, 1],
-          fov: 15,
-          near: 1,
-          far: 1000,
+    <div
+      style={{
+        height: "100vh",
+
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          height: "100vh",
         }}
       >
-        <ambientLight intensity={0.05} />
-        <pointLight position={[600, 35, 300]} />
-        <OrbitControls minDistance={20} maxDistance={2000} maxPolarAngle={Math.PI / 2} />
-        <group scale={[.1,.1,.1]} >
-          <mesh
-            receiveShadow
-            rotation-x={-Math.PI / 2}
-            position={[0, -1, 0]}
-          >
-            <planeBufferGeometry args={[2000, 2000]} />
-            <meshLambertMaterial color={0x808080} />
-          </mesh>
-          <group>
+        {" "}
+        <Canvas
+          camera={{
+            position: [100, 60, 25],
+            fov: 15,
+            near: 1,
+            far: 1000,
+          }}
+        >
+          <pointLight position={[600, 35, 300]} castShadow />
+          {/* <OrbitControls
+          minDistance={20}
+          maxDistance={2000}
+          maxPolarAngle={Math.PI / 2}
+        /> */}
+          <group scale={[0.09, 0.09, 0.09]} position={[0, -2, 0]}>
+            <mesh rotation-x={-Math.PI / 2} position={[0, -1, -10]}>
+              <planeBufferGeometry args={[2000, 2000]} />
+              <meshLambertMaterial color={0x808080} />
+            </mesh>
+
             <LucyModel />
+
+            <group position={[0, 1200, 0]}>
+              <RotateLight />
+            </group>
+            {spotLightRef.current && (
+              <spotLightHelper
+                args={[spotLightRef.current]}
+                ref={lightHelperRef}
+              />
+            )}
           </group>
-          <group position={[0, 1500, 0]}>
-            <RotateLight />
-          </group>
-          {spotLightRef.current && (
-            <spotLightHelper args={[spotLightRef.current]} ref={lightHelperRef} />
-          )}
-        </group>
-      </Canvas>
+        </Canvas>
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          top: "15%",
+
+          zIndex: 5,
+          left: "5%",
+        }}
+        className='flex flex-col h-3/4 text-white'
+      >
+        <span
+          style={{
+            fontSize: "80px",
+            lineHeight: "100px",
+            marginBottom: "1rem",
+          }}
+        >
+          Your Vision,
+          <br /> brought to life
+        </span>
+        <span
+          style={{
+            font: "32px",
+            lineHeight: "20px",
+          }}
+        >
+          Digitally Crafted solutions <br /> to bring your business to the next
+          level
+        </span>
+      </div>
     </div>
   );
 }
